@@ -430,7 +430,8 @@ dev.off()
 # count the number of papers that used testing data for the evaluation of 
 # calibration performance
 dat_test <- dat %>%
-  select(y = TestData) %>%
+  select(No, y = TestData) %>%
+  distinct() %>%
   drop_na() %>%
   count(y) %>%
   mutate(
@@ -464,7 +465,8 @@ dev.off()
 
 # count the number of papers that used a manual vs automated calibration approach
 dat_calibApproach <- dat %>%
-  select(y = CalibrationApproach) %>%
+  select(No, y=CalibrationApproach) %>%
+  distinct() %>%
   drop_na() %>%
   count(y) %>%
   mutate(
@@ -487,8 +489,9 @@ p_calibApproach <- ggplot(dat_calibApproach, aes(x = "", y = reorder(percentage,
 
 # count the number of papers based on the method of automated calibration approach
 dat_calibMethod <- dat %>%
-  select(y = CalibrationMethod) %>%
+  select(No, y = CalibrationMethod) %>%
   dplyr::filter(y != "Manual") %>%
+  distinct() %>%
   drop_na() %>%
   count(y) %>%
   mutate(
@@ -623,7 +626,7 @@ dat_analytic_scale <- dat %>%
   drop_na() %>%
   group_by(AnalyticalTechniques, Scale) %>%
   summarise(n = n())
-
+    
 # plot comparing analytical technique for different 
 # simulation scale (component/system, building, urban)
 p_analytic_scale <- ggplot(
