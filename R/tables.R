@@ -30,8 +30,8 @@ dat_simEngine <- dat %>%
   group_by(SimulationEngine) %>%
   summarise(n = sum(n)) %>%
   mutate(
-    percentage = round(n / sum(n) * 100, 1),
-    label = paste0("\n", round(n / sum(n) * 100, 1), "%")
+    percentage = round(n / sum(n) * 100, 0),
+    label = paste0("\n", round(n / sum(n) * 100, 0), "%")
   )
 
 # Table 3 ----------------------------------------------------------------------
