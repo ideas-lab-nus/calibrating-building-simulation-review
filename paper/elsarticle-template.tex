@@ -206,6 +206,7 @@ What stands out in Table \ref{tab:sim_engine} is that Resistance-Capacitance (RC
   \hline
   EnergyPlus & \multirow{3}{*}{white-box} & 60\%\\ 
   TRNSYS & & 15\% \\
+  DOE-2 & & 7\% \\
   \hline
   Resistance-Capacitance (RC) & Gray-box & 10\% \\
   \hline
@@ -263,14 +264,14 @@ Fig. \ref{fig:input} provides an overview of the most commonly used observed inp
 
 \begin{figure}[!h]
 \centering
-\includegraphics[width=\textwidth]{figures/target_byLevel.pdf}
+\includegraphics[width=\textwidth]{figures/obs_output_rank.pdf}
 \caption{Most common observed outputs used for calibrating building energy simulation models. The color indicates the spatial resolution of the observation.}
 \label{fig:target}
 \end{figure}
 
 \begin{figure}[!h]
 \centering
-\includegraphics[width=\textwidth]{figures/input_byLevel.pdf}
+\includegraphics[width=\textwidth]{figures/obs_input_rank.pdf}
 \caption{Most common observed inputs used for calibrating building energy simulation models. The color indicates the class of the model parameter.}
 \label{fig:input}
 \end{figure}
@@ -283,14 +284,14 @@ Fig. \ref{fig:param} lists the model parameters that were most commonly adjusted
 
 \begin{figure}[!h]
 \centering
-\includegraphics[width=\textwidth]{figures/param_byLevel.pdf}
+\includegraphics[width=\textwidth]{figures/param_rank.pdf}
 \caption{Most common calibration parameters used for calibrating building energy simulation models. The color indicates the class of the model parameter.}
 \label{fig:param}
 \end{figure}
 
 \begin{figure}[!h]
 \centering
-\includegraphics[width=\textwidth]{figures/target_parameter_point.pdf}
+\includegraphics[width=\textwidth]{figures/output_parameter.pdf}
 \caption{The magnitude of the relationship between the calibration parameters and their corresponding observed outputs for calibrating building energy simulation models.}
 \label{fig:target_param}
 \end{figure}
@@ -563,7 +564,7 @@ Fig. \ref{fig:analytical_approach} shows the breakdown of analytical techniques 
 
 \begin{figure}[!h]
 \centering
-\includegraphics[width=\textwidth]{figures/analytical_approach_scale.pdf}
+\includegraphics[width=\textwidth]{figures/approach_scale.pdf}
 \caption{Analytical techniques used in the papers reviewed grouped by the corresponding spatial scale (left plot) and calibration approach (right plot). Calibration processes can involve more than one analytical technique. Therefore, the values do not add up to the total number of papers reviewed (N=107).}
 \label{fig:analytical_approach}
 \end{figure}
