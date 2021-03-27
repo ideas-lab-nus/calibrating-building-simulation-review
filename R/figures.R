@@ -435,8 +435,8 @@ dat_test <- dat %>%
   drop_na() %>%
   count(y) %>%
   mutate(
-    percentage = round(n / sum(n) * 100, 1),
-    label = paste0(y, "\n", round(n / sum(n) * 100, 1), "%")
+    percentage = round(n / sum(n) * 100, 0),
+    label = paste0(y, "\n", round(n / sum(n) * 100, 0), "%")
   )
 
 # pie-chart of comparing the use of testing data
