@@ -317,16 +317,16 @@ Table \ref{tab:metrics} ranks the metrics used to assess calibration performance
   Metric & Acronym & No. of Papers \\
   \hline
   Coefficient of Variation of the Root Mean Square Error & $CV(RMSE)$ & 72 \\
-  Normalized Mean Bias Error & $NMBE$ & 60 \\
-  Root Mean Square Error & $RMSE$ & 18 \\
+  Normalized Mean Bias Error & $NMBE$ & 59 \\
+  Root Mean Square Error & $RMSE$ & 20 \\
+  Coefficient of Determination & $R^2$ & 12 \\
   Goodness of Fit & $GOF$ & 11 \\
-  Coefficient of Determination & $R^2$ & 11 \\
   Annual Percentage Error & $APE$ & 8 \\
   Coefficient of Variation & $CV$ & 4 \\
+  Mean Absolute Percentage Error & $MAPE$ & 4 \\
   Mean Absolute Error & $MAE$ & 3 \\
-  Mean Absolute Percentage Error & $MAPE$ & 3 \\
   Gelman-Rubin statistic & $\hat{R}$ & 3 \\
-  Others$^\dagger$ & -- & 20  \\
+  Others$^\dagger$ & -- & 18  \\
   \hline
 \end{tabular}}
 \raggedright \tiny $\dagger$ Metrics with $\leq 2$ counts. 
@@ -392,7 +392,7 @@ In order to facilitate comparison between probabilistic predictions and determin
 
 \subsubsection{Validation using out-of-sample data}
 
-Approximately two-thirds of the literature did not evaluate the calibrated model on an out-of-sample test dataset (Fig. \ref{fig:test}). The remaining studies advocated the use of an out-of-sample test dataset to avoid bias in the evaluation process. For instance, out-of-sample test buildings have been used to evaluate the robustness and homogeneity of urban-scale archetype predictive performance \cite{kristensen2018hierarchical, sokol2017validation, kristensen2020long}. In contrast to out-of-sample buildings, Hedegarrd et al. \cite{hedegaard2019bottom} calibrated 159 BES models using one month of hourly data, and evaluated their predictions using the subsequent month. Wang et al. \cite{wang2020bayesian} calibrated 84 residential buildings using five years of monthly data and evaluated their predictions using the subsequent two years of data.
+63\% of the studies reviewed did not evaluate the calibrated model on an out-of-sample test dataset (Fig. \ref{fig:test}). The remaining 37\% advocated the use of an out-of-sample test dataset to avoid bias in the evaluation process. For instance, out-of-sample test buildings have been used to evaluate the robustness and homogeneity of urban-scale archetype predictive performance \cite{kristensen2018hierarchical, sokol2017validation, kristensen2020long}. In contrast to out-of-sample buildings, Hedegarrd et al. \cite{hedegaard2019bottom} calibrated 159 BES models using one month of hourly data, and evaluated their predictions using the subsequent month. Wang et al. \cite{wang2020bayesian} calibrated 84 residential buildings using five years of monthly data and evaluated their predictions using the subsequent two years of data.
 
 \begin{figure}[!h]
 \centering
@@ -410,7 +410,7 @@ At the building-scale, the out-of-sample dataset typically comprises either a ra
 
 In general, calibration approaches can be classified as either manual or automated \cite{coakley2014review}. Automated approaches employ some form of computerized processes to tune model parameters by maximizing the model's fit to observations. In contrast, manual approaches rely on iterative pragmatic intervention by the modeler. 
 
-66\% of the studies reviewed utilizes an automated calibration approach (Fig. \ref{fig:auto_manual}). A majority of the automated approaches employ either mathematical optimization (58.5\%) or Bayesian calibration (33\%), with several using sampling methods to select a subset of models with the best fit (8.5\%). To aid future applications, Table \ref{tab:open_source} provides a list of packages, libraries, code repositories, and applications for sensitivity analysis, optimization and Bayesian calibration. 
+Approximately two-thirds of the literature reviewed utilizes an automated calibration approach (Fig. \ref{fig:auto_manual}). A majority of the automated approaches employ either mathematical optimization (58.5\%) or Bayesian calibration (33\%), with several using sampling methods to select a subset of models with the best fit (8.5\%). To aid future applications, Table \ref{tab:open_source} provides a list of packages, libraries, code repositories, and applications for sensitivity analysis, optimization and Bayesian calibration. 
 
 \begin{figure}[!h]
 \centering
@@ -459,7 +459,7 @@ Optimization has also been used for the calibration of building components and s
 
 \subsubsection{Calibration under uncertainty}
 
-Uncertainty is an inevitable characteristic of BES models because of the complexity and interactions between different building systems. In many building energy applications, uncertainty management is an important aspect when accounting for risk in the decision-making process. It is somewhat surprising that only 32 of the 108 ($\sim$30\%) papers reviewed involved some form of uncertainty quantification during model calibration. 
+Uncertainty is an inevitable characteristic of BES models because of the complexity and interactions between different building systems. In many building energy applications, uncertainty management is an important aspect when accounting for risk in the decision-making process. It is somewhat surprising that only 32 of the 107 ($\sim$30\%) papers reviewed involved some form of uncertainty quantification during model calibration. 
 
 \paragraph{Types and sources of uncertainty}
 
@@ -560,7 +560,7 @@ Regression methods refer to the use of regression or correlation coefficients to
 
 \subsubsection{Analytical techniques by approach and application}
 
-Fig. \ref{fig:analytical_approach} shows the breakdown of analytical techniques according to the calibration approach (manual or automated) and the spatial scale (component/system, building, or urban). The results, as shown in Fig. \ref{fig:analytical_approach} indicates that sensitivity analysis (SA), high-resolution data, uncertainty quantification (UQ), and building audits are the most commonly applied in automated approaches. Comparatively, SA is not as widely used in manual calibration approaches. 20\% of the papers utilizing manual approaches involve applying SA in contrast with 65\% of the papers for automated approaches. A possible explanation is that equfinality issues are especially challenging for automated approaches since objective functions are normally designed to minimize discrepancies between simulated and observed responses. This might produce a model with a higher prediction accuracy, but it might not inform the modeler about the true parameter values \cite{beven2006manifesto}. In contrast, manual approaches adjust the calibration parameters based on heuristics that are based on the expertise of an experienced modeler. Therefore, issues of identifiability are not as critical in manual approaches. 
+Fig. \ref{fig:analytical_approach} shows the breakdown of analytical techniques according to the calibration approach (manual or automated) and the spatial scale (component/system, building, or urban). The results, as shown in Fig. \ref{fig:analytical_approach} indicates that sensitivity analysis (SA), high-resolution data, uncertainty quantification (UQ), and building audits are the most commonly applied in automated approaches. Comparatively, SA is not as widely used in manual calibration approaches. Only about 20\% of the papers utilizing manual approaches employ SA in contrast with 65\% of the papers for automated approaches. A possible explanation is that equfinality issues are especially challenging for automated approaches since objective functions are normally designed to minimize discrepancies between simulated and observed responses. This might produce a model with a higher prediction accuracy, but it might not inform the modeler about the true parameter values \cite{beven2006manifesto}. In contrast, manual approaches adjust the calibration parameters based on heuristics that are based on the expertise of an experienced modeler. Therefore, issues of identifiability are not as critical in manual approaches. 
 
 \begin{figure}[!h]
 \centering
