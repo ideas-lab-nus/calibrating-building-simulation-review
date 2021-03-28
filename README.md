@@ -32,7 +32,7 @@ Please cite this compendium as:
 │   ├── data.csv                                  # Dataset summarizing papers reviewed
 │   └── location_geocode.csv                      # Dataset with locations and their longitude and lattitude
 ├── paper                                         # 
-│   └──figures                                    # Plots generated using figures.R
+│   └── figures                                   # Plots generated using figures.R
 │   │   └── ...                                   #
 │   ├── tex                                       # LaTeX source document 
 │   └── bib                                       # Bibliographic information file
