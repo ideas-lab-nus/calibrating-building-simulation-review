@@ -258,14 +258,57 @@ p_obs_output_rank <- ggplot(dat_obs_output, aes(
   xlab("Number of Papers") +
   ylab("Observed Outputs") +
   theme(
-    panel.grid.major = element_blank(),
+    panel.grid.minor = element_blank(),
+    panel.grid.major.y = element_blank(),
     panel.border = element_blank()
   )
 
+
+dat_res_obs_output <- dat %>%
+  select(No, Resolution, ObservedOutput) %>%
+  unnest(ObservedOutput) %>%
+  distinct() %>%
+  drop_na() %>%
+  group_by(Resolution, ObservedOutput) %>%
+  summarise(n = n()) %>%
+  mutate(
+    obs_output_level = str_replace(ObservedOutput, "\\_.*", ""),
+    obs_output_variable = str_replace(ObservedOutput, ".*\\_", "")
+  ) %>%
+  filter(obs_output_variable %in% dat_obs_output$obs_output_variable)
+
+p_res_obs_output <- ggplot(
+  dat_res_obs_output,
+  aes(
+    x = fct_rev(factor(obs_output_variable,
+               level = dat_obs_output$obs_output_variable)),
+    y = n,
+    fill = factor(Resolution,
+                  level = c("Annual", "Monthly", "Weekly", "Daily", "Hourly", "Sub-hourly")
+    )
+  )
+) +
+  geom_bar(position = "fill", stat = "identity") +
+  scale_fill_brewer(palette = "Blues") +
+  scale_y_continuous(labels = scales::percent) +
+  xlab("Observed Outputs") +
+  ylab("Percentage of Instances") +
+  labs(fill = "Temporal\nScales") +
+  coord_flip() +
+  theme(
+    panel.grid.minor = element_blank(),
+    panel.grid.major.y = element_blank(),
+    panel.border = element_blank()
+  )
+
+
 # Save plot for Figure 4 of paper
 pdf(file = file.path("paper", "figures", "obs_output_rank.pdf"), 
-    height = 2.5, width = 8)
-p_obs_output_rank
+    height = 5, width = 8)
+grid.arrange(p_obs_output_rank,
+             p_res_obs_output,
+             nrow = 2
+)
 dev.off()
 
 # Figure 5 ---------------------------------------------------------------------
@@ -296,7 +339,8 @@ p_obs_input_rank <- ggplot(dat_obs_input, aes(
   xlab("Number of Papers") +
   ylab("Observed Inputs") +
   theme(
-    panel.grid.major = element_blank(),
+    panel.grid.minor = element_blank(),
+    panel.grid.major.y = element_blank(),
     panel.border = element_blank()
   )
 
@@ -347,7 +391,6 @@ pdf(file = file.path("paper", "figures", "param_rank.pdf"),
     height = 5, width = 8)
 p_parameter_rank
 dev.off()
-
 
 # Figure 7 ---------------------------------------------------------------------
 
