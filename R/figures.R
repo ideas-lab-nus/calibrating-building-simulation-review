@@ -355,7 +355,7 @@ dev.off()
 # count the number of papers based on the calibration parameters used for 
 # the calibration
 dat_parameter <- dat %>%
-  select(No, "CalibrationParameter") %>%
+  select(No, CalibrationParameter) %>%
   unnest(CalibrationParameter) %>%
   distinct() %>%
   drop_na() %>%
@@ -391,6 +391,53 @@ pdf(file = file.path("paper", "figures", "param_rank.pdf"),
     height = 5, width = 8)
 p_parameter_rank
 dev.off()
+
+# Figure 7 --------------------------------------------------------------------
+
+dat_approach_parameter <- dat %>%
+  select(No, CalibrationApproach, CalibrationParameter) %>%
+  unnest(CalibrationParameter) %>%
+  distinct() %>%
+  drop_na() %>%
+  group_by(CalibrationApproach, CalibrationParameter) %>%
+  summarise(n = n()) %>%
+  mutate(
+    param_level = str_replace(CalibrationParameter, "\\_.*", ""),
+    param_variable = str_replace(CalibrationParameter, ".*\\_", "")
+  ) %>%
+  filter(param_variable %in% dat_parameter$param_variable)
+
+param_fct_lvls <- c("MaterialProperties", "InfiltrationRate", 
+                    "OccupantDensity", "EquipmentPowerDensity",
+                    "LightingPowerDensity", "HeatingSetpoint", 
+                    "ComponentEfficiency", "CoolingSetpoint",
+                    "OutdoorAir", "OccupantSch", "EquipmentSch",
+                    "LightsSch", "Usage", "OperationSch", 
+                    "NaturalVentilation", "LumpedDensity", "Geometry",
+                    "ComponentCapacity")
+
+p_approach_parameter <- ggplot(
+  dat_approach_parameter,
+  aes(
+    x = n,
+    y = fct_rev(factor(param_variable,
+               levels = param_fct_lvls)),
+    fill = CalibrationApproach
+  )
+) +
+  geom_bar(position = "fill", stat = "identity") +
+  scale_fill_brewer(palette = "Set2") +
+  scale_x_continuous(labels = scales::percent) +
+  ylab("Calibration Parameters") +
+  xlab("Percentage of Instances") +
+  labs(fill = "Calibration\nMethod") +
+  theme(
+    panel.grid.minor = element_blank(),
+    panel.grid.major.x = element_blank(),
+    panel.border = element_blank()
+  )
+
+
 
 # Figure 7 ---------------------------------------------------------------------
 
