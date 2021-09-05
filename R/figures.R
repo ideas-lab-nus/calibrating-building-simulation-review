@@ -437,6 +437,66 @@ p_approach_parameter <- ggplot(
     panel.border = element_blank()
   )
 
+# Figure 7 ---------------------------------------------------------------------
+
+dat_sensitivity_parameter <- dat %>%
+  select(No, SensitivityAnalysisType, CalibrationParameter) %>%
+  unnest(CalibrationParameter) %>%
+  distinct() %>%
+  drop_na() %>%
+  group_by(SensitivityAnalysisType, CalibrationParameter) %>%
+  summarise(n = n()) %>%
+  mutate(
+    param_level = str_replace(CalibrationParameter, "\\_.*", ""),
+    param_variable = str_replace(CalibrationParameter, ".*\\_", "")
+  ) %>%
+  filter(param_variable %in% dat_parameter$param_variable)
+
+p_sensitivity_parameter <- ggplot(
+  dat_sensitivity_parameter,
+  aes(
+    x = n,
+    y = fct_rev(factor(param_variable,
+                       levels = param_fct_lvls)),
+    fill = SensitivityAnalysisType
+  )
+) +
+  geom_bar(position = "fill", stat = "identity") +
+  scale_fill_brewer(palette = "Set2") +
+  scale_x_continuous(labels = scales::percent) +
+  ylab("Calibration Parameters") +
+  xlab("Percentage of Instances") +
+  labs(fill = "Sensitivity\nAnalysis") +
+  theme(
+    panel.grid.minor = element_blank(),
+    panel.grid.major.x = element_blank(),
+    panel.border = element_blank()
+  )
+
+# Figure 7 ---------------------------------------------------------------------
+
+dat_analytic_sch <- dat %>%
+  select(No, AnalyticalTechniques, CalibrationParameter) %>%
+  unnest(CalibrationParameter) %>%
+  filter(grepl("Sch", CalibrationParameter)) %>%
+  unnest(AnalyticalTechniques) %>%
+  select(-CalibrationParameter) %>%
+  distinct() %>%
+  drop_na() %>%
+  mutate(AnalyticalTechniques = toupper(AnalyticalTechniques)) %>%
+  drop_na() %>%
+  group_by(AnalyticalTechniques) %>%
+  summarise(n = n())
+
+# bar-plot comparing number of papers across different analytical techniques
+p_analytic <- ggplot(
+  dat_analytic_sch,
+  aes(reorder(AnalyticalTechniques, -n, sum), y = n) # arrange bars based on count
+) +
+  geom_bar(color = "black", stat = "identity", fill = "#66C2A5") +
+  ylab("Number of Papers") +
+  xlab("Analytical Techniques")
+
 
 
 # Figure 7 ---------------------------------------------------------------------
@@ -607,6 +667,35 @@ grid.arrange(p_calibApproach, p_calibMethod,
   nrow = 1
 )
 dev.off()
+
+
+# count the number of papers that used a manual vs automated calibration approach
+dat_sensitivity_approach <- dat %>%
+  select(No, SensitivityAnalysisType, CalibrationApproach) %>%
+  distinct() %>%
+  drop_na() %>%
+  group_by(SensitivityAnalysisType, CalibrationApproach) %>%
+  summarise(n=n())
+
+p_sensitivity_approach <- ggplot(
+  dat_sensitivity_approach,
+  aes(
+    x = CalibrationApproach,
+    y = n,
+    fill = SensitivityAnalysisType
+  )
+) +
+  geom_bar(position = "fill", stat = "identity") +
+  scale_fill_brewer(palette = "Set2") +
+  scale_y_continuous(labels = scales::percent) +
+  xlab("Calibration Method") +
+  ylab("Percentage of Instances") +
+  labs(fill = "Sensitivity\nAnalysis") +
+  theme(
+    panel.grid.minor = element_blank(),
+    panel.grid.major.x = element_blank(),
+    panel.border = element_blank()
+  )
 
 # Figure 11 --------------------------------------------------------------------
 
