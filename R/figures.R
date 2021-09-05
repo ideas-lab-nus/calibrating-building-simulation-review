@@ -434,7 +434,8 @@ p_output_parameter <- ggplot(
     y = factor(param_variable,
       level = rev(c(
         "MaterialProperties", "InfiltrationRate",
-        "EPD", "OccupantDensity", "LPD", "OccupantSch", "EquipmentSch", "LightsSch",
+        "EquipmentPowerDensity", "OccupantDensity", "LightingPowerDensity", 
+        "OccupantSch", "EquipmentSch", "LightsSch",
         "HeatingSetpoint", "CoolingSetpoint", "OutdoorAir",
         "ComponentEfficiency", "OperationSch", "ComponentCapacity",
         "Usage"
