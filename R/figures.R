@@ -480,22 +480,35 @@ dat_analytic_sch <- dat %>%
   unnest(CalibrationParameter) %>%
   filter(grepl("Sch", CalibrationParameter)) %>%
   unnest(AnalyticalTechniques) %>%
+  mutate(
+    param_level = str_replace(CalibrationParameter, "\\_.*", ""),
+    AnalyticalTechniques = toupper(AnalyticalTechniques)
+  ) %>%
   select(-CalibrationParameter) %>%
   distinct() %>%
   drop_na() %>%
-  mutate(AnalyticalTechniques = toupper(AnalyticalTechniques)) %>%
-  drop_na() %>%
-  group_by(AnalyticalTechniques) %>%
+  group_by(param_level, AnalyticalTechniques) %>%
   summarise(n = n())
 
 # bar-plot comparing number of papers across different analytical techniques
-p_analytic <- ggplot(
+p_analytic_sch <- ggplot(
   dat_analytic_sch,
-  aes(reorder(AnalyticalTechniques, -n, sum), y = n) # arrange bars based on count
+  aes(y = reorder(AnalyticalTechniques, n, sum), # arrange bars based on count
+      x = n,
+      fill = param_level) 
 ) +
-  geom_bar(color = "black", stat = "identity", fill = "#66C2A5") +
-  ylab("Number of Papers") +
-  xlab("Analytical Techniques")
+  geom_bar(position = position_dodge2(preserve = "single"), 
+           stat = "identity") +
+  scale_fill_manual(values = c("InternalGains" = "#FC8D62", 
+                               "HVAC" = "#E78AC3")) +
+  ylab("Analytical Techniques") +
+  xlab("Number of papers") +
+  labs(fill = "Parameter\nClass") +
+  theme(
+    panel.grid.minor = element_blank(),
+    panel.grid.major.y = element_blank(),
+    panel.border = element_blank()
+  )
 
 
 
