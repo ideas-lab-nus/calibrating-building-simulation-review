@@ -589,41 +589,6 @@ pdf(file = file.path("paper", "figures", "output_parameter.pdf"),
 p_output_parameter
 dev.off()
 
-# Figure 8 ---------------------------------------------------------------------
-
-# count the number of papers that used testing data for the evaluation of 
-# calibration performance
-dat_test <- dat %>%
-  select(No, y = TestData) %>%
-  distinct() %>%
-  drop_na() %>%
-  count(y) %>%
-  mutate(
-    percentage = round(n / sum(n) * 100, 0),
-    label = paste0(y, "\n", round(n / sum(n) * 100, 0), "%")
-  )
-
-# pie-chart of comparing the use of testing data
-p_test <- ggplot(dat_test, aes(x = "", y = reorder(percentage, n, sum), fill = y)) +
-  geom_bar(color = "black", stat = "identity") +
-  coord_polar("y", start = 0) +
-  geom_text(aes(label = label), size = 4, position = position_stack(vjust = 0.5)) +
-  scale_fill_manual(values = c("No" = "#FC8D62", "Yes" = "#66C2A5")) +
-  theme(
-    legend.position = "none",
-    axis.title = element_blank(),
-    axis.text = element_blank(),
-    panel.grid = element_blank(),
-    plot.title = element_text(hjust = 0.5)
-  ) +
-  ggtitle("Assessed calibration performance with\nout-of-sample test dataset")
-
-# Save plot for Figure 8 of paper
-pdf(file = file.path("paper", "figures", "test_data.pdf"), 
-    height = 5, width = 4)
-p_test
-dev.off()
-
 
 # Figure 9 ---------------------------------------------------------------------
 
@@ -635,21 +600,37 @@ dat_calibApproach <- dat %>%
   count(y) %>%
   mutate(
     percentage = round(n / sum(n) * 100, 0),
-    label = paste0(y, "\n", round(n / sum(n) * 100, 0), "%")
+   # label = paste0(y, "\n", round(n / sum(n) * 100, 0), "%"),
+    paper = "Chong et al. (2021)"
+  ) %>%
+  select(y, percentage, paper) %>%
+  add_row(y = "Automated", percentage = 26, paper = "Coakley et al. (2015)") %>%
+  add_row(y = "Manual", percentage = 74, paper = "Coakley et al. (2015)") 
+
+
+
+p_calibApproach <- ggplot(
+  dat_calibApproach,
+  aes(
+    x = factor(paper,
+                  levels = c("Coakley et al. (2015)",
+                             "Chong et al. (2021)")),
+    y = percentage,
+    fill = y
+  )
+) +
+  geom_bar(position = "fill", stat = "identity") +
+  scale_fill_brewer(palette = "Set2") +
+  scale_y_continuous(labels = scales::percent) +
+  ylab("Percentage of Papers") +
+  xlab("Review Paper") +
+  labs(fill = "Calibration\nMethod") +
+  theme(
+    panel.grid.minor = element_blank(),
+    panel.grid.major.x = element_blank(),
+    panel.border = element_blank()
   )
 
-# pie-chart comparing percentage of papers using manual vs automated calibration approach
-p_calibApproach <- ggplot(dat_calibApproach, aes(x = "", y = reorder(percentage, n, sum), fill = y)) +
-  geom_bar(color = "black", stat = "identity") +
-  coord_polar("y", start = 0) +
-  geom_text(aes(label = label), size = 4, position = position_stack(vjust = 0.5)) +
-  scale_fill_manual(values = c("Manual" = "#FC8D62", "Automated" = "#66C2A5")) +
-  theme(
-    legend.position = "none",
-    axis.title = element_blank(),
-    axis.text = element_blank(),
-    panel.grid = element_blank()
-  )
 
 # count the number of papers based on the method of automated calibration approach
 dat_calibMethod <- dat %>%
@@ -712,6 +693,12 @@ p_sensitivity_approach <- ggplot(
 
 # Figure 11 --------------------------------------------------------------------
 
+coakley_analytic <- data.frame(
+  AnalyticalTechniques = c("SA", "HIGH", "UQ", "AUDIT", "EXPERT", "PARRED", 
+                           "BASE", "EVIDENCE", "SIG", "STEM", "INT"), 
+  n = c(3, 1, 10, 6, 4, 4, 1, 14, 6, 10, 1),
+  paper = "Coakley et al. (2015)")
+
 # count the number of papers based on the type of analytical techniques 
 dat_analytic <- dat %>%
   select(No, AnalyticalTechniques) %>%
@@ -720,16 +707,25 @@ dat_analytic <- dat %>%
   mutate(AnalyticalTechniques = toupper(AnalyticalTechniques)) %>%
   drop_na() %>%
   group_by(AnalyticalTechniques) %>%
-  summarise(n = n())
+  summarise(n = n()) %>%
+  mutate(paper = "Chong et al. (2021)") %>%
+  rbind(coakley_analytic)
 
 # bar-plot comparing number of papers across different analytical techniques
 p_analytic <- ggplot(
   dat_analytic,
-  aes(reorder(AnalyticalTechniques, -n, sum), y = n) # arrange bars based on count
+  aes(x = reorder(AnalyticalTechniques, -n, sum), 
+      y = n) # arrange bars based on count
 ) +
   geom_bar(color = "black", stat = "identity", fill = "#66C2A5") +
-  ylab("Number of Papers") +
-  xlab("Analytical Techniques")
+  ylab("Number of Instances") +
+  xlab("Analytical Techniques") +
+  facet_grid(rows = vars(paper), scales="free") +
+  theme(
+    panel.grid.minor = element_blank(),
+    panel.grid.major.x = element_blank(),
+    panel.border = element_blank()
+  )
 
 # Save plot for Figure 11 of paper
 pdf(file = file.path("paper", "figures", "analytical.pdf"),
