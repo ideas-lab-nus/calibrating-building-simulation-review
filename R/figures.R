@@ -304,7 +304,7 @@ p_res_obs_output <- ggplot(
 
 # Save plot for Figure 4 of paper
 pdf(file = file.path("paper", "figures", "obs_output_rank.pdf"), 
-    height = 5, width = 8)
+    height = 8, width = 8)
 grid.arrange(p_obs_output_rank,
              p_res_obs_output,
              nrow = 2
@@ -604,8 +604,8 @@ dat_calibApproach <- dat %>%
     paper = "Chong et al. (2021)"
   ) %>%
   select(y, percentage, paper) %>%
-  add_row(y = "Automated", percentage = 26, paper = "Coakley et al. (2015)") %>%
-  add_row(y = "Manual", percentage = 74, paper = "Coakley et al. (2015)") 
+  add_row(y = "Automated", percentage = 26, paper = "Coakley et al. (2014)") %>%
+  add_row(y = "Manual", percentage = 74, paper = "Coakley et al. (2014)") 
 
 
 
@@ -613,7 +613,7 @@ p_calibApproach <- ggplot(
   dat_calibApproach,
   aes(
     x = factor(paper,
-                  levels = c("Coakley et al. (2015)",
+                  levels = c("Coakley et al. (2014)",
                              "Chong et al. (2021)")),
     y = percentage,
     fill = y
@@ -632,34 +632,35 @@ p_calibApproach <- ggplot(
   )
 
 
-# count the number of papers based on the method of automated calibration approach
-dat_calibMethod <- dat %>%
-  select(No, y = CalibrationMethod) %>%
-  dplyr::filter(y != "Manual") %>%
-  distinct() %>%
-  drop_na() %>%
-  count(y) %>%
-  mutate(
-    percentage = round(n / sum(n) * 100, 0),
-    label = paste0(y, "\n", round(n / sum(n) * 100, 0), "%")
-  )
-
-# bar-plot comparing number of papers for different methods of automated calibration
-p_calibMethod <- ggplot(
-  dat_calibMethod,
-  aes(y = reorder(y, n, sum), x = n)
-) +
-  geom_bar(color = "black", stat = "identity", fill = "#66C2A5", width = 0.75) +
-  xlab("No. of Papers") +
-  ylab("Automated\nCalibration Approaches")
+# # count the number of papers based on the method of automated calibration approach
+# dat_calibMethod <- dat %>%
+#   select(No, y = CalibrationMethod) %>%
+#   dplyr::filter(y != "Manual") %>%
+#   distinct() %>%
+#   drop_na() %>%
+#   count(y) %>%
+#   mutate(
+#     percentage = round(n / sum(n) * 100, 0),
+#     label = paste0(y, "\n", round(n / sum(n) * 100, 0), "%")
+#   )
+# 
+# # bar-plot comparing number of papers for different methods of automated calibration
+# p_calibMethod <- ggplot(
+#   dat_calibMethod,
+#   aes(y = reorder(y, n, sum), x = n)
+# ) +
+#   geom_bar(color = "black", stat = "identity", fill = "#66C2A5", width = 0.75) +
+#   xlab("No. of Papers") +
+#   ylab("Automated\nCalibration Approaches")
 
 # Save plot for Figure 9 of paper
 pdf(file = file.path("paper", "figures", "auto_manual.pdf"), 
-    height = 3.5, width = 8)
-grid.arrange(p_calibApproach, p_calibMethod,
-  widths = c(1, 2),
-  nrow = 1
-)
+    height = 5, width = 5.5)
+# grid.arrange(p_calibApproach, p_calibMethod,
+#   widths = c(1, 2),
+#   nrow = 1
+# )
+p_calibApproach
 dev.off()
 
 
@@ -697,7 +698,7 @@ coakley_analytic <- data.frame(
   AnalyticalTechniques = c("SA", "HIGH", "UQ", "AUDIT", "EXPERT", "PARRED", 
                            "BASE", "EVIDENCE", "SIG", "STEM", "INT"), 
   n = c(3, 1, 10, 6, 4, 4, 1, 14, 6, 10, 1),
-  paper = "Coakley et al. (2015)")
+  paper = "Coakley et al. (2014)")
 
 # count the number of papers based on the type of analytical techniques 
 dat_analytic <- dat %>%
@@ -729,7 +730,7 @@ p_analytic <- ggplot(
 
 # Save plot for Figure 11 of paper
 pdf(file = file.path("paper", "figures", "analytical.pdf"),
-    height = 3.5, width = 8)
+    height = 6, width = 8)
 p_analytic
 dev.off()
 
