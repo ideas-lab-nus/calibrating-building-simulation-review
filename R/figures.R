@@ -5,7 +5,7 @@ library(maps)
 library(RColorBrewer)
 library(tidyverse)
 
-# read data 
+# read data
 dat <- fread(file.path("data", "data.csv"),
   na.strings = c("", "NA")
 )
@@ -25,44 +25,8 @@ dat[, c(cols) := lapply(.SD, stringi::stri_split_regex, "\\s*;\\s*",
 .SDcols = cols
 ]
 
+
 # Figure 1 ---------------------------------------------------------------------
-
-# summarize the percentage of instances based on their spatial and 
-# temporal scales 
-dat_spatial_temporal <- dat %>%
-  select(No, sub, Resolution, Scale) %>%
-  drop_na() %>%
-  group_by(Resolution, Scale) %>%
-  summarise(n = n())
-
-# plot comparing the data temporal resolution across various spatial scale 
-p_spatial_temporal_stacked <- ggplot(
-  dat_spatial_temporal,
-  aes(
-    x = factor(Scale,
-               level = c("Component / System", "Building", "Urban")
-    ),
-    y = n,
-    fill = factor(Resolution,
-                  level = c("Annual", "Monthly", "Weekly", "Daily", "Hourly", "Sub-hourly")
-    )
-  )
-) +
-  geom_bar(position = "fill", stat = "identity", width = 0.75) +
-  scale_fill_brewer(palette = "Blues") +
-  scale_y_continuous(labels = scales::percent) +
-  xlab("Spatial Scale") +
-  ylab("Percentage of Instances") +
-  labs(fill = "Temporal\nScales")
-
-# Save plot for Figure 1 of paper
-pdf(file = file.path("paper", "figures", "spatial_temporal_stacked.pdf"), 
-    height = 5, width = 5.5)
-p_spatial_temporal_stacked
-dev.off()
-
-
-# Figure 2 ---------------------------------------------------------------------
 
 # count the number of instances based on the location and scale of the study
 dat_lat_lon <- dat %>%
@@ -76,18 +40,18 @@ dat_lat_lon <- dat %>%
   inner_join(geocode, by = "Location")
 
 # plot indicating location of different case studies based on their
-# geographic location. 
+# geographic location.
 mp <- ggplot(dat_lat_lon, aes(
   x = lon, y = lat,
-  fill = factor(Scale,  
+  fill = factor(Scale,
     level = c("Component / System", "Building", "Urban")
   ),
   size = n
 )) +
-  borders("world", colour = "#BDBDBD", size = 0.25) +  # create a layer of borders
+  borders("world", colour = "#BDBDBD", size = 0.25) + # create a layer of borders
   geom_point(shape = 21, alpha = 0.5, color = "black") +
   scale_fill_brewer(name = "Scale", palette = "Accent") +
-  scale_size(  
+  scale_size(
     name = "No. of\nInstances",
     range = c(1, 6)
   ) +
@@ -164,12 +128,14 @@ dat_climate <- dat %>%
   )
 
 # colors for different climate zones
-cols <- as.character(dat_climate$col)  
+cols <- as.character(dat_climate$col)
 names(cols) <- dat_climate$Climate
 
 # position and size of annotations
-text_x <- 18; text_y <- 31
-text_size <- 2.5; text_x_int <- 3.5
+text_x <- 18
+text_y <- 31
+text_size <- 2.5
+text_x_int <- 3.5
 
 # bar plot indicating number of instances across different climate zones
 p_climate <- ggplot(
@@ -225,9 +191,189 @@ grid.arrange(mp,
 )
 dev.off()
 
+
+# Figure 2 ---------------------------------------------------------------------
+
+# count the number of papers that used a manual vs automated calibration
+# approach and compare with the results of Coakley et al. (2014)
+
+dat_calibApproach <- dat %>%
+  select(No, y = CalibrationApproach) %>%
+  distinct() %>%
+  drop_na() %>%
+  count(y) %>%
+  mutate(
+    percentage = round(n / sum(n) * 100, 0),
+    paper = "Chong et al. (2021)"
+  ) %>%
+  select(y, percentage, paper) %>%
+  add_row(y = "Automated", percentage = 26, paper = "Coakley et al. (2014)") %>%
+  add_row(y = "Manual", percentage = 74, paper = "Coakley et al. (2014)")
+
+
+p_calibApproach <- ggplot(
+  dat_calibApproach,
+  aes(
+    x = factor(paper,
+      levels = c(
+        "Coakley et al. (2014)",
+        "Chong et al. (2021)"
+      )
+    ),
+    y = percentage,
+    fill = y
+  )
+) +
+  geom_bar(position = "fill", stat = "identity") +
+  scale_fill_brewer(palette = "Set2") +
+  scale_y_continuous(labels = scales::percent) +
+  ylab("Percentage of Papers") +
+  xlab("Review Paper") +
+  labs(fill = "Calibration\nMethod") +
+  theme(
+    panel.grid.minor = element_blank(),
+    panel.grid.major.x = element_blank(),
+    panel.border = element_blank()
+  )
+
+# Save plot for Figure 2 of paper
+pdf(
+  file = file.path("paper", "figures", "auto_manual.pdf"),
+  height = 5, width = 5.5
+)
+p_calibApproach
+dev.off()
+
+
 # Figure 4 ---------------------------------------------------------------------
 
-# count the number of papers based on the observed output used for the 
+# number of papers based on type of analytical techniques.
+# extracted from Coakley et al. (2104)
+
+coakley_analytic <- data.frame(
+  AnalyticalTechniques = c(
+    "SA", "HIGH", "UQ", "AUDIT", "EXPERT", "PARRED",
+    "BASE", "EVIDENCE", "SIG", "STEM", "INT"
+  ),
+  n = c(3, 1, 10, 6, 4, 4, 1, 14, 6, 10, 1),
+  paper = "Coakley et al. (2014)"
+)
+
+# count the number of papers based on the type of analytical techniques and
+dat_analytic <- dat %>%
+  select(No, AnalyticalTechniques) %>%
+  unnest(AnalyticalTechniques) %>%
+  distinct() %>%
+  mutate(AnalyticalTechniques = toupper(AnalyticalTechniques)) %>%
+  drop_na() %>%
+  group_by(AnalyticalTechniques) %>%
+  summarise(n = n()) %>%
+  mutate(paper = "Chong et al. (2021)") %>%
+  rbind(coakley_analytic)
+
+# bar-plot comparing number of papers across different analytical techniques
+p_analytic <- ggplot(
+  dat_analytic,
+  aes(
+    x = reorder(AnalyticalTechniques, -n, sum),
+    y = n
+  ) # arrange bars based on count
+) +
+  geom_bar(color = "black", stat = "identity", fill = "#66C2A5") +
+  ylab("Number of Instances") +
+  xlab("Analytical Techniques") +
+  facet_grid(rows = vars(paper), scales = "free") +
+  theme(
+    panel.grid.minor = element_blank(),
+    panel.grid.major.x = element_blank(),
+    panel.border = element_blank()
+  )
+
+# Save plot for Figure 4 of paper
+pdf(
+  file = file.path("paper", "figures", "analytical.pdf"),
+  height = 6, width = 8
+)
+p_analytic
+dev.off()
+
+
+# Figure 5 ---------------------------------------------------------------------
+
+# count the number of papers based on the calibration approach and the
+# analytical techniques
+dat_analytic_approach <- dat %>%
+  select(No, CalibrationApproach, AnalyticalTechniques) %>%
+  unnest(AnalyticalTechniques) %>%
+  distinct() %>%
+  mutate(AnalyticalTechniques = toupper(AnalyticalTechniques)) %>%
+  drop_na() %>%
+  group_by(AnalyticalTechniques, CalibrationApproach) %>%
+  summarise(n = n())
+
+# plot comparing analytical technique for different
+# calibration approach (manual vs automated)
+p_analytic_approach <- ggplot(
+  dat_analytic_approach,
+  aes(
+    x = factor(CalibrationApproach, level = c("Manual", "Automated")),
+    y = reorder(AnalyticalTechniques, n, sum), size = n
+  )
+) +
+  geom_point(alpha = 0.8, color = "#66C2A5") +
+  geom_text(aes(label = n), size = 3.5) +
+  scale_size(
+    name = "No. of\nPapers",
+    range = c(1, 10)
+  ) +
+  xlab("Calibration Approach") +
+  ylab("Analytical Techniques")
+
+# count the number of papers based on the calibration approach and the
+# scale of the simulation
+dat_analytic_scale <- dat %>%
+  select(No, Scale, AnalyticalTechniques) %>%
+  unnest(AnalyticalTechniques) %>%
+  distinct() %>%
+  mutate(AnalyticalTechniques = toupper(AnalyticalTechniques)) %>%
+  drop_na() %>%
+  group_by(AnalyticalTechniques, Scale) %>%
+  summarise(n = n())
+
+# plot comparing analytical technique for different
+# simulation scale (component/system, building, urban)
+p_analytic_scale <- ggplot(
+  dat_analytic_scale,
+  aes(
+    x = factor(Scale, level = c("Component / System", "Building", "Urban")),
+    y = reorder(AnalyticalTechniques, n, sum), size = n
+  )
+) +
+  geom_point(alpha = 0.8, color = "#66C2A5") +
+  geom_text(aes(label = n), size = 3.5) +
+  scale_size(
+    name = "No. of\nPapers",
+    range = c(1, 7.5)
+  ) +
+  xlab("Spatial Scale") +
+  ylab("Analytical Techniques")
+
+# Save plot for Figure 5 of paper
+pdf(
+  file = file.path("paper", "figures", "approach_scale.pdf"),
+  height = 5.5, width = 8
+)
+grid.arrange(p_analytic_scale + theme(legend.position = "none"),
+  p_analytic_approach,
+  widths = c(2.8, 2.7),
+  nrow = 1
+)
+dev.off()
+
+
+# Figure 5 ---------------------------------------------------------------------
+
+# count the number of papers based on the observed output used for the
 # calibration
 dat_obs_output <- dat %>%
   select(No, "ObservedOutput") %>%
@@ -240,7 +386,8 @@ dat_obs_output <- dat %>%
     ratio = cummulative_count / sum(n),
     percentage = round(n / 107, digits = 2)
   ) %>%
-  filter(n >= 5) %>% # filter out observed inputs with count <= 5
+  filter(n >= 5) %>%
+  # filter out observed inputs with count <= 5
   mutate(
     obs_output_level = str_replace(ObservedOutput, "\\_.*", ""),
     obs_output_variable = str_replace(ObservedOutput, ".*\\_", "")
@@ -263,57 +410,130 @@ p_obs_output_rank <- ggplot(dat_obs_output, aes(
     panel.border = element_blank()
   )
 
+# Save plot for Figure 4 of paper
+pdf(
+  file = file.path("paper", "figures", "obs_output_rank.pdf"),
+  height = 4, width = 8
+)
+p_obs_output_rank
+dev.off()
 
-dat_res_obs_output <- dat %>%
-  select(No, Resolution, ObservedOutput) %>%
+
+# Figure 6 ---------------------------------------------------------------------
+
+# count the number of papers based on the type of sensitivity analysis, the
+# general category of sensitivity analysis method,
+# the specific  sensitivity analysis algorithm
+# split by calibration approach (automated vs manual)
+
+dat_sa <- dat %>%
+  select(No, SensitivityAnalysis, SensitivityAnalysisType, CalibrationApproach) %>%
+  unnest(SensitivityAnalysis) %>%
+  distinct() %>%
+  mutate(
+    sa_method = str_replace(SensitivityAnalysis, "\\_.*", ""),
+    sa_algorithm = str_replace(SensitivityAnalysis, ".*\\_", "")
+  ) %>%
+  drop_na() %>%
+  group_by(SensitivityAnalysisType, sa_method, CalibrationApproach) %>%
+  summarise(n = n()) %>%
+  ungroup() %>%
+  mutate(
+    percentage = round(n / sum(n) * 100, 0),
+    label = paste0(round(n / sum(n) * 100, 0), "%")
+  )
+
+# bar-plot comparing number of papers across sensitivity analysis methods
+# and highlighting if it is a global or local method
+p_sa <- ggplot(dat_sa, aes(
+  x = reorder(SensitivityAnalysisType, -n, sum),
+  y = n, fill = reorder(sa_method, n, sum)
+)) +
+  geom_bar(color = "black", stat = "identity") +
+  scale_fill_manual(
+    name = "Methods",
+    values = c(
+      "No" = "#8DA0CB", "Perturbation" = "#FC8D62",
+      "Screening" = "#66C2A5", "Regression" = "#E78AC3",
+      "Variance" = "#A6D854", "Metamodel" = "#FFD92F",
+      "RSA" = "#E5C494"
+    )
+  ) +
+  facet_grid(cols = vars(CalibrationApproach)) +
+  theme(legend.position = "bottom") +
+  ylab("No. of Papers") +
+  xlab("Sensitivity Analysis")
+
+# Save plot for Figure 12 of paper
+pdf(
+  file = file.path("paper", "figures", "sa.pdf"),
+  height = 5, width = 8
+)
+p_sa
+dev.off()
+
+
+# Figure 9 ---------------------------------------------------------------------
+
+dat_res_scale_obs_output <- dat %>%
+  select(No, Resolution, Scale, ObservedOutput) %>%
   unnest(ObservedOutput) %>%
   distinct() %>%
   drop_na() %>%
-  group_by(Resolution, ObservedOutput) %>%
-  summarise(n = n()) %>%
   mutate(
     obs_output_level = str_replace(ObservedOutput, "\\_.*", ""),
     obs_output_variable = str_replace(ObservedOutput, ".*\\_", "")
   ) %>%
-  filter(obs_output_variable %in% dat_obs_output$obs_output_variable)
+  filter(obs_output_variable %in% dat_obs_output$obs_output_variable) %>%
+  group_by(Resolution, Scale, obs_output_variable) %>%
+  summarise(n = n())
 
-p_res_obs_output <- ggplot(
-  dat_res_obs_output,
+
+p_res_scale_obs_output <- ggplot(
+  dat_res_scale_obs_output,
   aes(
-    x = fct_rev(factor(obs_output_variable,
-               level = dat_obs_output$obs_output_variable)),
-    y = n,
+    y = fct_rev(factor(obs_output_variable,
+      levels = dat_obs_output$obs_output_variable
+    )),
+    x = n,
     fill = factor(Resolution,
-                  level = c("Annual", "Monthly", "Weekly", "Daily", "Hourly", "Sub-hourly")
+      levels = c(
+        "Annual", "Monthly", "Weekly",
+        "Daily", "Hourly", "Sub-hourly"
+      )
     )
   )
 ) +
-  geom_bar(position = "fill", stat = "identity") +
+  geom_bar(stat = "identity") +
   scale_fill_brewer(palette = "Blues") +
-  scale_y_continuous(labels = scales::percent) +
-  xlab("Observed Outputs") +
-  ylab("Percentage of Instances") +
+  ylab("Observed Outputs") +
+  xlab("Number of Papers") +
   labs(fill = "Temporal\nScales") +
-  coord_flip() +
+  facet_grid(rows = vars(factor(Scale,
+    levels = c(
+      "Component / System",
+      "Building",
+      "Urban"
+    )
+  ))) +
   theme(
     panel.grid.minor = element_blank(),
     panel.grid.major.y = element_blank(),
     panel.border = element_blank()
   )
 
-
-# Save plot for Figure 4 of paper
-pdf(file = file.path("paper", "figures", "obs_output_rank.pdf"), 
-    height = 8, width = 8)
-grid.arrange(p_obs_output_rank,
-             p_res_obs_output,
-             nrow = 2
+# Save plot for Figure 9 of paper
+pdf(
+  file = file.path("paper", "figures", "res_scale_obs_output.pdf"),
+  height = 8, width = 8
 )
+p_res_scale_obs_output
 dev.off()
 
-# Figure 5 ---------------------------------------------------------------------
 
-# count the number of papers based on the observed inputs used for the 
+# Figure 10 --------------------------------------------------------------------
+
+# count the number of papers based on the observed inputs used for the
 # calibration
 dat_obs_input <- dat %>%
   select(No, "ObservedInput") %>%
@@ -323,7 +543,8 @@ dat_obs_input <- dat %>%
   count(ObservedInput, sort = TRUE) %>%
   mutate(cummulative_count = cumsum(n)) %>%
   mutate(ratio = cummulative_count / sum(n)) %>%
-  filter(n >= 3) %>%  # filter out observed inputs with count <= 2
+  filter(n >= 3) %>%
+  # filter out observed inputs with count <= 2
   mutate(
     obs_input_level = str_replace(ObservedInput, "\\_.*", ""),
     obs_input_variable = str_replace(ObservedInput, ".*\\_", "")
@@ -345,174 +566,75 @@ p_obs_input_rank <- ggplot(dat_obs_input, aes(
   )
 
 # Save plot for Figure 5 of paper
-pdf(file = file.path("paper", "figures", "obs_input_rank.pdf"), 
-    height = 5, width = 8)
+pdf(
+  file = file.path("paper", "figures", "obs_input_rank.pdf"),
+  height = 5, width = 8
+)
 p_obs_input_rank
 dev.off()
 
+# Figure 11 --------------------------------------------------------------------
+
+
+param_fct_lvls <- c(
+  "Envelope_MaterialProperties", "Envelope_InfiltrationRate",
+  "InternalGains_OccupantDensity", "InternalGains_EquipmentPowerDensity",
+  "InternalGains_LightingPowerDensity", "Zone_HeatingSetpoint",
+  "ComponentEfficiency", "Zone_CoolingSetpoint",
+  "Zone_OutdoorAir", "InternalGains_OccupantSch", "InternalGains_EquipmentSch",
+  "InternalGains_LightsSch", "HotWater_Usage", "HVAC_OperationSch",
+  "Zone_NaturalVentilation", "InternalGains_LumpedDensity", "Geometry_Geometry",
+  "HVAC_ComponentCapacity"
+)
+
 # Figure 6 ---------------------------------------------------------------------
 
-# count the number of papers based on the calibration parameters used for 
+
+
+# count the number of papers based on the calibration parameters used for
 # the calibration
 dat_parameter <- dat %>%
-  select(No, CalibrationParameter) %>%
+  select(No, SensitivityAnalysisType, CalibrationParameter, CalibrationApproach) %>%
   unnest(CalibrationParameter) %>%
   distinct() %>%
   drop_na() %>%
-  count(CalibrationParameter, sort = TRUE) %>%
-  mutate(cummulative_count = cumsum(n)) %>%
-  mutate(ratio = cummulative_count / sum(n)) %>%
-  filter(n >= 7) %>%
-  mutate(
-    param_level = str_replace(CalibrationParameter, "\\_.*", ""),
-    param_variable = str_replace(CalibrationParameter, ".*\\_", "")
-  )
+  filter(CalibrationParameter %in% param_fct_lvls) %>%
+  group_by(SensitivityAnalysisType, CalibrationParameter, CalibrationApproach) %>%
+  summarise(n = n())
 
 # bar plot of calibration parameters ranked by the number of papers
-p_parameter_rank <- ggplot(dat_parameter, aes(
-  x = n, y = reorder(param_variable, n, sum),
-  fill = param_level
-)) +
-  geom_bar(color = "#B3B3B3", stat = "identity") +
-  scale_fill_manual(
-    breaks = c("Envelope", "InternalGains", "Zone", "HVAC", "HotWater", "Geometry"),
-    values = c("#66C2A5", "#FC8D62", "#8DA0CB", "#E78AC3", "#A6D854", "#FFD92F"),
-    name = "Parameter\nClass"
-  ) +
-  xlab("Number of Papers") +
-  ylab("Calibration Parameters") +
-  theme(
-    panel.grid.major = element_blank(),
-    panel.border = element_blank()
-  )
-
-# Save plot for Figure 6 of paper
-pdf(file = file.path("paper", "figures", "param_rank.pdf"), 
-    height = 5, width = 8)
-p_parameter_rank
-dev.off()
-
-# Figure 7 --------------------------------------------------------------------
-
-dat_approach_parameter <- dat %>%
-  select(No, CalibrationApproach, CalibrationParameter) %>%
-  unnest(CalibrationParameter) %>%
-  distinct() %>%
-  drop_na() %>%
-  group_by(CalibrationApproach, CalibrationParameter) %>%
-  summarise(n = n()) %>%
-  mutate(
-    param_level = str_replace(CalibrationParameter, "\\_.*", ""),
-    param_variable = str_replace(CalibrationParameter, ".*\\_", "")
-  ) %>%
-  filter(param_variable %in% dat_parameter$param_variable)
-
-param_fct_lvls <- c("MaterialProperties", "InfiltrationRate", 
-                    "OccupantDensity", "EquipmentPowerDensity",
-                    "LightingPowerDensity", "HeatingSetpoint", 
-                    "ComponentEfficiency", "CoolingSetpoint",
-                    "OutdoorAir", "OccupantSch", "EquipmentSch",
-                    "LightsSch", "Usage", "OperationSch", 
-                    "NaturalVentilation", "LumpedDensity", "Geometry",
-                    "ComponentCapacity")
-
-p_approach_parameter <- ggplot(
-  dat_approach_parameter,
+p_parameter_rank <- ggplot(
+  dat_parameter,
   aes(
     x = n,
-    y = fct_rev(factor(param_variable,
-               levels = param_fct_lvls)),
-    fill = CalibrationApproach
-  )
-) +
-  geom_bar(position = "fill", stat = "identity") +
-  scale_fill_brewer(palette = "Set2") +
-  scale_x_continuous(labels = scales::percent) +
-  ylab("Calibration Parameters") +
-  xlab("Percentage of Instances") +
-  labs(fill = "Calibration\nMethod") +
-  theme(
-    panel.grid.minor = element_blank(),
-    panel.grid.major.x = element_blank(),
-    panel.border = element_blank()
-  )
-
-# Figure 7 ---------------------------------------------------------------------
-
-dat_sensitivity_parameter <- dat %>%
-  select(No, SensitivityAnalysisType, CalibrationParameter) %>%
-  unnest(CalibrationParameter) %>%
-  distinct() %>%
-  drop_na() %>%
-  group_by(SensitivityAnalysisType, CalibrationParameter) %>%
-  summarise(n = n()) %>%
-  mutate(
-    param_level = str_replace(CalibrationParameter, "\\_.*", ""),
-    param_variable = str_replace(CalibrationParameter, ".*\\_", "")
-  ) %>%
-  filter(param_variable %in% dat_parameter$param_variable)
-
-p_sensitivity_parameter <- ggplot(
-  dat_sensitivity_parameter,
-  aes(
-    x = n,
-    y = fct_rev(factor(param_variable,
-                       levels = param_fct_lvls)),
+    y = fct_rev(factor(CalibrationParameter,
+      levels = param_fct_lvls
+    )),
     fill = SensitivityAnalysisType
   )
 ) +
-  geom_bar(position = "fill", stat = "identity") +
+  geom_bar(stat = "identity") +
   scale_fill_brewer(palette = "Set2") +
-  scale_x_continuous(labels = scales::percent) +
   ylab("Calibration Parameters") +
-  xlab("Percentage of Instances") +
+  xlab("Number of Papers") +
   labs(fill = "Sensitivity\nAnalysis") +
   theme(
     panel.grid.minor = element_blank(),
     panel.grid.major.x = element_blank(),
     panel.border = element_blank()
-  )
+  ) +
+  facet_grid(cols = vars(CalibrationApproach))
 
-# Figure 7 ---------------------------------------------------------------------
-
-dat_analytic_sch <- dat %>%
-  select(No, AnalyticalTechniques, CalibrationParameter) %>%
-  unnest(CalibrationParameter) %>%
-  filter(grepl("Sch", CalibrationParameter)) %>%
-  unnest(AnalyticalTechniques) %>%
-  mutate(
-    param_level = str_replace(CalibrationParameter, "\\_.*", ""),
-    AnalyticalTechniques = toupper(AnalyticalTechniques)
-  ) %>%
-  select(-CalibrationParameter) %>%
-  distinct() %>%
-  drop_na() %>%
-  group_by(param_level, AnalyticalTechniques) %>%
-  summarise(n = n())
-
-# bar-plot comparing number of papers across different analytical techniques
-p_analytic_sch <- ggplot(
-  dat_analytic_sch,
-  aes(y = reorder(AnalyticalTechniques, n, sum), # arrange bars based on count
-      x = n,
-      fill = param_level) 
-) +
-  geom_bar(position = position_dodge2(preserve = "single"), 
-           stat = "identity") +
-  scale_fill_manual(values = c("InternalGains" = "#FC8D62", 
-                               "HVAC" = "#E78AC3")) +
-  ylab("Analytical Techniques") +
-  xlab("Number of papers") +
-  labs(fill = "Parameter\nClass") +
-  theme(
-    panel.grid.minor = element_blank(),
-    panel.grid.major.y = element_blank(),
-    panel.border = element_blank()
-  )
+# Save plot for Figure 6 of paper
+pdf(
+  file = file.path("paper", "figures", "param_rank.pdf"),
+  height = 6, width = 9
+)
+p_parameter_rank
+dev.off()
 
 
-
-# Figure 7 ---------------------------------------------------------------------
+# Figure 12 --------------------------------------------------------------------
 
 # count the number of papers based on the observed output and corresponding
 # calibration parameters used for the calibration
@@ -544,7 +666,7 @@ dat_output_parameter <- dat %>%
   ) %>%
   filter(n >= 4)
 
-# plot of observed outputs against calibration parameters 
+# plot of observed outputs against calibration parameters
 p_output_parameter <- ggplot(
   dat_output_parameter,
   aes(
@@ -554,7 +676,7 @@ p_output_parameter <- ggplot(
     y = factor(param_variable,
       level = rev(c(
         "MaterialProperties", "InfiltrationRate",
-        "EquipmentPowerDensity", "OccupantDensity", "LightingPowerDensity", 
+        "EquipmentPowerDensity", "OccupantDensity", "LightingPowerDensity",
         "OccupantSch", "EquipmentSch", "LightsSch",
         "HeatingSetpoint", "CoolingSetpoint", "OutdoorAir",
         "ComponentEfficiency", "OperationSch", "ComponentCapacity",
@@ -583,264 +705,10 @@ p_output_parameter <- ggplot(
   xlab("Observed Outputs") +
   ylab("Calibration Parameters")
 
-# Save plot for Figure 7 of paper
-pdf(file = file.path("paper", "figures", "output_parameter.pdf"), 
-    height = 7, width = 8)
-p_output_parameter
-dev.off()
-
-
-# Figure 9 ---------------------------------------------------------------------
-
-# count the number of papers that used a manual vs automated calibration approach
-dat_calibApproach <- dat %>%
-  select(No, y=CalibrationApproach) %>%
-  distinct() %>%
-  drop_na() %>%
-  count(y) %>%
-  mutate(
-    percentage = round(n / sum(n) * 100, 0),
-   # label = paste0(y, "\n", round(n / sum(n) * 100, 0), "%"),
-    paper = "Chong et al. (2021)"
-  ) %>%
-  select(y, percentage, paper) %>%
-  add_row(y = "Automated", percentage = 26, paper = "Coakley et al. (2014)") %>%
-  add_row(y = "Manual", percentage = 74, paper = "Coakley et al. (2014)") 
-
-
-
-p_calibApproach <- ggplot(
-  dat_calibApproach,
-  aes(
-    x = factor(paper,
-                  levels = c("Coakley et al. (2014)",
-                             "Chong et al. (2021)")),
-    y = percentage,
-    fill = y
-  )
-) +
-  geom_bar(position = "fill", stat = "identity") +
-  scale_fill_brewer(palette = "Set2") +
-  scale_y_continuous(labels = scales::percent) +
-  ylab("Percentage of Papers") +
-  xlab("Review Paper") +
-  labs(fill = "Calibration\nMethod") +
-  theme(
-    panel.grid.minor = element_blank(),
-    panel.grid.major.x = element_blank(),
-    panel.border = element_blank()
-  )
-
-
-# # count the number of papers based on the method of automated calibration approach
-# dat_calibMethod <- dat %>%
-#   select(No, y = CalibrationMethod) %>%
-#   dplyr::filter(y != "Manual") %>%
-#   distinct() %>%
-#   drop_na() %>%
-#   count(y) %>%
-#   mutate(
-#     percentage = round(n / sum(n) * 100, 0),
-#     label = paste0(y, "\n", round(n / sum(n) * 100, 0), "%")
-#   )
-# 
-# # bar-plot comparing number of papers for different methods of automated calibration
-# p_calibMethod <- ggplot(
-#   dat_calibMethod,
-#   aes(y = reorder(y, n, sum), x = n)
-# ) +
-#   geom_bar(color = "black", stat = "identity", fill = "#66C2A5", width = 0.75) +
-#   xlab("No. of Papers") +
-#   ylab("Automated\nCalibration Approaches")
-
-# Save plot for Figure 9 of paper
-pdf(file = file.path("paper", "figures", "auto_manual.pdf"), 
-    height = 5, width = 5.5)
-# grid.arrange(p_calibApproach, p_calibMethod,
-#   widths = c(1, 2),
-#   nrow = 1
-# )
-p_calibApproach
-dev.off()
-
-
-# count the number of papers that used a manual vs automated calibration approach
-dat_sensitivity_approach <- dat %>%
-  select(No, SensitivityAnalysisType, CalibrationApproach) %>%
-  distinct() %>%
-  drop_na() %>%
-  group_by(SensitivityAnalysisType, CalibrationApproach) %>%
-  summarise(n=n())
-
-p_sensitivity_approach <- ggplot(
-  dat_sensitivity_approach,
-  aes(
-    x = CalibrationApproach,
-    y = n,
-    fill = SensitivityAnalysisType
-  )
-) +
-  geom_bar(position = "fill", stat = "identity") +
-  scale_fill_brewer(palette = "Set2") +
-  scale_y_continuous(labels = scales::percent) +
-  xlab("Calibration Method") +
-  ylab("Percentage of Instances") +
-  labs(fill = "Sensitivity\nAnalysis") +
-  theme(
-    panel.grid.minor = element_blank(),
-    panel.grid.major.x = element_blank(),
-    panel.border = element_blank()
-  )
-
-# Figure 11 --------------------------------------------------------------------
-
-coakley_analytic <- data.frame(
-  AnalyticalTechniques = c("SA", "HIGH", "UQ", "AUDIT", "EXPERT", "PARRED", 
-                           "BASE", "EVIDENCE", "SIG", "STEM", "INT"), 
-  n = c(3, 1, 10, 6, 4, 4, 1, 14, 6, 10, 1),
-  paper = "Coakley et al. (2014)")
-
-# count the number of papers based on the type of analytical techniques 
-dat_analytic <- dat %>%
-  select(No, AnalyticalTechniques) %>%
-  unnest(AnalyticalTechniques) %>%
-  distinct() %>%
-  mutate(AnalyticalTechniques = toupper(AnalyticalTechniques)) %>%
-  drop_na() %>%
-  group_by(AnalyticalTechniques) %>%
-  summarise(n = n()) %>%
-  mutate(paper = "Chong et al. (2021)") %>%
-  rbind(coakley_analytic)
-
-# bar-plot comparing number of papers across different analytical techniques
-p_analytic <- ggplot(
-  dat_analytic,
-  aes(x = reorder(AnalyticalTechniques, -n, sum), 
-      y = n) # arrange bars based on count
-) +
-  geom_bar(color = "black", stat = "identity", fill = "#66C2A5") +
-  ylab("Number of Instances") +
-  xlab("Analytical Techniques") +
-  facet_grid(rows = vars(paper), scales="free") +
-  theme(
-    panel.grid.minor = element_blank(),
-    panel.grid.major.x = element_blank(),
-    panel.border = element_blank()
-  )
-
-# Save plot for Figure 11 of paper
-pdf(file = file.path("paper", "figures", "analytical.pdf"),
-    height = 6, width = 8)
-p_analytic
-dev.off()
-
-
-# Figure 12 --------------------------------------------------------------------
-
-# count the number of papers based on the type of sensitivity analysis, the
-# general category of sensitivity analysis method, and the specific 
-# sensitivity analysis algorithm
-dat_sa <- dat %>%
-  select(No, SensitivityAnalysis, SensitivityAnalysisType) %>%
-  unnest(SensitivityAnalysis) %>%
-  distinct() %>%
-  mutate(sa_method = str_replace(SensitivityAnalysis, "\\_.*", ""),
-         sa_algorithm = str_replace(SensitivityAnalysis, ".*\\_", "")) %>%
-  filter(SensitivityAnalysis != "No") %>%
-  drop_na() %>%
-  group_by(SensitivityAnalysisType, sa_method) %>%
-  summarise(n = n()) %>%
-  ungroup() %>%
-  mutate(
-    percentage = round(n / sum(n) * 100, 0),
-    label = paste0(round(n / sum(n) * 100, 0), "%")
-  )
-
-# bar-plot comparing number of papers across sensitivity analysis methods 
-# and highlighting if it is a global or local method
-p_sa <- ggplot(dat_sa, aes(x = reorder(sa_method, -n, sum), 
-                           y = n, fill = SensitivityAnalysisType)) +
-  geom_bar(color = "black", stat = "identity") +
-  scale_fill_brewer(palette = "Set2") +
-  theme(
-    legend.position = "bottom",
-    legend.title = element_blank()
-  ) +
-  ylab("No. of Papers") +
-  xlab("Sensitivity Analysis Methods")
-
 # Save plot for Figure 12 of paper
-pdf(file = file.path("paper", "figures", "sa.pdf"), 
-    height = 4, width = 5)
-p_sa
-dev.off()
-
-# Figure 13 --------------------------------------------------------------------
-
-# count the number of papers based on the calibration approach and the 
-# analytical techniques 
-dat_analytic_approach <- dat %>%
-  select(No, CalibrationApproach, AnalyticalTechniques) %>%
-  unnest(AnalyticalTechniques) %>% 
-  distinct() %>%
-  mutate(AnalyticalTechniques = toupper(AnalyticalTechniques)) %>%
-  drop_na() %>%
-  group_by(AnalyticalTechniques, CalibrationApproach) %>%
-  summarise(n = n())
-
-# plot comparing analytical technique for different 
-# calibration approach (manual vs automated)
-p_analytic_approach <- ggplot(
-  dat_analytic_approach,
-  aes(
-    x = factor(CalibrationApproach, level = c("Manual", "Automated")),
-    y = reorder(AnalyticalTechniques, n, sum), size = n
-  )
-) +
-  geom_point(alpha = 0.8, color = "#66C2A5") +
-  geom_text(aes(label = n), size = 3.5) +
-  scale_size(
-    name = "No. of\nPapers",
-    range = c(1, 10)
-  ) +
-  xlab("Calibration Approach") +
-  ylab("Analytical Techniques")
-
-# count the number of papers based on the calibration approach and the 
-# scale of the simulation
-dat_analytic_scale <- dat %>%
-  select(No, Scale, AnalyticalTechniques) %>%
-  unnest(AnalyticalTechniques) %>%
-  distinct() %>%
-  mutate(AnalyticalTechniques = toupper(AnalyticalTechniques)) %>%
-  drop_na() %>%
-  group_by(AnalyticalTechniques, Scale) %>%
-  summarise(n = n())
-    
-# plot comparing analytical technique for different 
-# simulation scale (component/system, building, urban)
-p_analytic_scale <- ggplot(
-  dat_analytic_scale,
-  aes(
-    x = factor(Scale, level = c("Component / System", "Building", "Urban")),
-    y = reorder(AnalyticalTechniques, n, sum), size = n
-  )
-) +
-  geom_point(alpha = 0.8, color = "#66C2A5") +
-  geom_text(aes(label = n), size = 3.5) +
-  scale_size(
-    name = "No. of\nPapers",
-    range = c(1, 7.5)
-  ) +
-  xlab("Spatial Scale") +
-  ylab("Analytical Techniques")
-
-# Save plot for Figure 13 of paper
-pdf(file = file.path("paper", "figures", "approach_scale.pdf"), 
-    height = 5.5, width = 8)
-grid.arrange(p_analytic_scale + theme(legend.position = "none"),
-  p_analytic_approach,
-  widths = c(2.8, 2.7),
-  nrow = 1
+pdf(
+  file = file.path("paper", "figures", "output_parameter.pdf"),
+  height = 7, width = 8
 )
+p_output_parameter
 dev.off()
