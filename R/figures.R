@@ -27,6 +27,12 @@ dat[, c(cols) := lapply(.SD, stringi::stri_split_regex, "\\s*;\\s*",
 
 
 # Figure 1 ---------------------------------------------------------------------
+# caption:Geographic distribution of case study buildings and the corresponding
+# scale of the simulation (component/system, building, or urban) (top plot) and
+# the distribution of the case study buildings based on the k\"{o}ppen climate
+# zones (bottom plot).
+# ------------------------------------------------------------------------------
+
 
 # count the number of instances based on the location and scale of the study
 dat_lat_lon <- dat %>%
@@ -193,9 +199,9 @@ dev.off()
 
 
 # Figure 2 ---------------------------------------------------------------------
-
-# count the number of papers that used a manual vs automated calibration
-# approach and compare with the results of Coakley et al. (2014)
+# caption: Comparison of the type of calibration approach (Automated or Manual)
+# in this review with that by Coakley et al. (2014)
+# ------------------------------------------------------------------------------
 
 dat_calibApproach <- dat %>%
   select(No, y = CalibrationApproach) %>%
@@ -246,9 +252,11 @@ dev.off()
 
 
 # Figure 4 ---------------------------------------------------------------------
+# caption: Analytical techniques (for both manual and automated calibration
+# approaches) used in this review (top plot) and the review by
+# Coakley et al. (2014)
+# ------------------------------------------------------------------------------
 
-# number of papers based on type of analytical techniques.
-# extracted from Coakley et al. (2104)
 
 coakley_analytic <- data.frame(
   AnalyticalTechniques = c(
@@ -299,6 +307,13 @@ dev.off()
 
 
 # Figure 5 ---------------------------------------------------------------------
+# caption: Analytical techniques used in the papers reviewed grouped by the
+# corresponding spatial scale (left plot) and calibration approach (right plot).
+# Calibration processes can involve more than one analytical technique.
+# Therefore, the values do not add up to the total number of papers
+# reviewed (N=107).
+# ------------------------------------------------------------------------------
+
 
 # count the number of papers based on the calibration approach and the
 # analytical techniques
@@ -371,55 +386,10 @@ grid.arrange(p_analytic_scale + theme(legend.position = "none"),
 dev.off()
 
 
-# Figure 5 ---------------------------------------------------------------------
-
-# count the number of papers based on the observed output used for the
-# calibration
-dat_obs_output <- dat %>%
-  select(No, "ObservedOutput") %>%
-  unnest(ObservedOutput) %>%
-  distinct() %>%
-  drop_na() %>%
-  count(ObservedOutput, sort = TRUE) %>%
-  mutate(cummulative_count = cumsum(n)) %>%
-  mutate(
-    ratio = cummulative_count / sum(n),
-    percentage = round(n / 107, digits = 2)
-  ) %>%
-  filter(n >= 5) %>%
-  # filter out observed inputs with count <= 5
-  mutate(
-    obs_output_level = str_replace(ObservedOutput, "\\_.*", ""),
-    obs_output_variable = str_replace(ObservedOutput, ".*\\_", "")
-  )
-
-# bar-plot of observed outputs ranked by the number of papers
-p_obs_output_rank <- ggplot(dat_obs_output, aes(
-  x = n, y = reorder(obs_output_variable, n, sum),
-  fill = factor(obs_output_level,
-    level = c("Building", "Zone", "Component")
-  )
-)) +
-  geom_bar(color = "#B3B3B3", stat = "identity") +
-  scale_fill_brewer(palette = "Set2", name = "Parameter\nClass") +
-  xlab("Number of Papers") +
-  ylab("Observed Outputs") +
-  theme(
-    panel.grid.minor = element_blank(),
-    panel.grid.major.y = element_blank(),
-    panel.border = element_blank()
-  )
-
-# Save plot for Figure 4 of paper
-pdf(
-  file = file.path("paper", "figures", "obs_output_rank.pdf"),
-  height = 4, width = 8
-)
-p_obs_output_rank
-dev.off()
-
-
 # Figure 6 ---------------------------------------------------------------------
+# caption:Types of sensitivity analysis used in building energy simulation split
+# by automated vs manual calibration approaches.
+# ------------------------------------------------------------------------------
 
 # count the number of papers based on the type of sensitivity analysis, the
 # general category of sensitivity analysis method,
@@ -474,6 +444,32 @@ dev.off()
 
 
 # Figure 9 ---------------------------------------------------------------------
+# caption: Most common observed output used for calibrating building energy
+# simulation models split by the temporal resolution used for the calibration
+# and the scale of the energy model (i.e., calibration of Component / System,
+# Building, or Urban scale building energy models).
+# ------------------------------------------------------------------------------
+
+
+# count the number of papers based on the observed output used for the
+# calibration
+dat_obs_output <- dat %>%
+  select(No, "ObservedOutput") %>%
+  unnest(ObservedOutput) %>%
+  distinct() %>%
+  drop_na() %>%
+  count(ObservedOutput, sort = TRUE) %>%
+  mutate(cummulative_count = cumsum(n)) %>%
+  mutate(
+    ratio = cummulative_count / sum(n),
+    percentage = round(n / 107, digits = 2)
+  ) %>%
+  filter(n >= 5) %>%
+  # filter out observed inputs with count <= 5
+  mutate(
+    obs_output_level = str_replace(ObservedOutput, "\\_.*", ""),
+    obs_output_variable = str_replace(ObservedOutput, ".*\\_", "")
+  )
 
 dat_res_scale_obs_output <- dat %>%
   select(No, Resolution, Scale, ObservedOutput) %>%
@@ -532,6 +528,10 @@ dev.off()
 
 
 # Figure 10 --------------------------------------------------------------------
+# caption: Most common observed inputs used for calibrating building energy
+# simulation models. The color indicates the class of the model parameter.
+# ------------------------------------------------------------------------------
+
 
 # count the number of papers based on the observed inputs used for the
 # calibration
@@ -565,7 +565,7 @@ p_obs_input_rank <- ggplot(dat_obs_input, aes(
     panel.border = element_blank()
   )
 
-# Save plot for Figure 5 of paper
+# Save plot for Figure 10 of paper
 pdf(
   file = file.path("paper", "figures", "obs_input_rank.pdf"),
   height = 5, width = 8
@@ -574,6 +574,10 @@ p_obs_input_rank
 dev.off()
 
 # Figure 11 --------------------------------------------------------------------
+# caption: Most common calibration parameters used for calibrating building
+# energy simulation models split by sensitivity analysis and
+# calibration approach.
+# ------------------------------------------------------------------------------
 
 
 param_fct_lvls <- c(
@@ -586,10 +590,6 @@ param_fct_lvls <- c(
   "Zone_NaturalVentilation", "InternalGains_LumpedDensity", "Geometry_Geometry",
   "HVAC_ComponentCapacity"
 )
-
-# Figure 6 ---------------------------------------------------------------------
-
-
 
 # count the number of papers based on the calibration parameters used for
 # the calibration
@@ -635,6 +635,11 @@ dev.off()
 
 
 # Figure 12 --------------------------------------------------------------------
+# caption: The magnitude of the relationship between the calibration parameters
+# and their corresponding observed outputs for calibrating building
+# energy simulation models
+# ------------------------------------------------------------------------------
+
 
 # count the number of papers based on the observed output and corresponding
 # calibration parameters used for the calibration
