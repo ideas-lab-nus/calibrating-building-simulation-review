@@ -3,8 +3,9 @@
 This repository contains the research compendium for our paper:
 
 > Adrian Chong, Yaonan Gu and Hongyuan Jia, (2021).
-> *Calibrating building energy simulation models: A review of methods, inputs and outputs*.
-> *In Review*. <https://doi.org/xxx/xxx>
+> *Calibrating building energy simulation models: A review of the basics to guide future work*.
+> Energy and Buildings, 111533. doi: <https://doi.org/10.1016/j.enbuild.2021.111533>
+
 
 The compendium includes all the data and code needed to reproduce the analysis, figures and text 
 associated with the publication
