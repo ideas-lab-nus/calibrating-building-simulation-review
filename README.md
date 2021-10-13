@@ -15,10 +15,13 @@ associated with the publication
 Please cite this compendium as:
 ```
 @article{chong2021calibrating,
-  title={Calibrating building energy simulation models: A review of methods, inputs and outputs},
+  title={Calibrating building energy simulation models: A review of the basics to guide future work},
   author={Chong, Adrian and Gu, Yaonan and Jia, Hongyuan},
+  journal={Energy and Buildings},
+  pages={111533},
   year={2021},
-  note={In Review}
+  doi={https://doi.org/10.1016/j.enbuild.2021.111533},
+  publisher={Elsevier}
 }
 ```
 
