@@ -44,3 +44,8 @@ Please cite this compendium as:
 │   └── bst                                       # Bibliographic style files
 └── calibrating-building-simulation-review.Rproj  # R project file for compendium
 ```
+
+## Licenses
+
+**Text and figures :**
+[CC-BY-4.0](http://creativecommons.org/licenses/by/4.0/)
